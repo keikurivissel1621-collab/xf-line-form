@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>フォームを開いています…</title>
+  <!-- LINEのLIFF SDK（公式CDN） -->
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+         display:flex;align-items:center;justify-content:center;height:100vh;margin:0;color:#444;background:#fafafa;}
+    .msg{text-align:center;}
+    .spinner{width:32px;height:32px;border:3px solid #ddd;border-top-color:#06c755;border-radius:50%;
+             animation:spin .8s linear infinite;margin:0 auto 16px;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+  </style>
+</head>
+<body>
+  <div class="msg">
+    <div class="spinner"></div>
+    <p>フォームを開いています…</p>
+  </div>
+
+  <script>
+    // ===== ここだけ設定する =====
+    const LIFF_ID    = "2010276697-xHPhagt5";                // LINE Developersで発行したLIFF ID
+    const TALLY_BASE = "https://tally.so/forms/obv2zM";       // 回答してもらうTallyフォーム
+    // ============================
+
+    async function main() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+
+        // LINEログインしていなければログインを促す（自動で戻ってくる）
+        if (!liff.isLoggedIn()) {
+          liff.login({ redirectUri: location.href });
+          return;
+        }
+
+        // 本人のLINE情報を取得
+        const profile = await liff.getProfile();
+
+        // Tallyの隠しフィールドに渡すパラメータを組み立て
+        const params = new URLSearchParams({
+          line_user_id: profile.userId,        // 誰のLINEかを一意に特定するID
+          line_name:    profile.displayName    // LINEの表示名（人間が見て分かる用）
+        });
+
+        // Tallyフォームへリダイレクト
+        location.replace(TALLY_BASE + "?" + params.toString());
+
+      } catch (e) {
+        // 取得に失敗しても、フォーム自体には進めるようにフォールバック
+        console.error("LIFF error:", e);
+        location.replace(TALLY_BASE);
+      }
+    }
+
+    main();
+  </script>
+</body>
+</html>
